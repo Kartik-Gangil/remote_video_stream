@@ -13,7 +13,7 @@ const io = socketIO(server);
 
 app.use(express.json());
 app.use(cors());
-const PORT = process.env.PORT || 8000;
+const PORT = process.env.PORT || 8005;
 
 app.use(express.static('public'));
 
@@ -55,4 +55,4 @@ io.on('connection', socket => {
     socket.on('disconnect', () => console.log('User disconnected', socket.id));
 });
 
-server.listen(PORT, '0.0.0.0',() => console.log('Server running on 8000'));
+server.listen(PORT, '0.0.0.0',() => console.log('Server running on 8005'));

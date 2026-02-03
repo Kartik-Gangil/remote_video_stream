@@ -15,11 +15,20 @@ let localStream;
 
 let isRemoteAction = false;
 
+let player;
 
 copyBtn.addEventListener('click', () => {
     navigator.clipboard.writeText(id.innerText);
 })
 
+function onYouTubeIframeAPIReady() {
+    player = new YT.Player("movie", {
+        videoId: "HoCOiKW1SaI",
+        events: {
+            onStateChange: onPlayerStateChange
+        }
+    });
+}
 
 // Show peer ID
 peer.on('open', id => {
@@ -56,33 +65,57 @@ peer.on('call', call => {
 
 
 // Broadcast events
-movie.addEventListener('play', () => {
+function onPlayerStateChange(event) {
     if (isRemoteAction) return;
-    socket.emit('videoAction', { type: 'play', currentTime: movie.currentTime });
-});
+    const currentTime = player.getCurrentTime();
 
-movie.addEventListener('pause', () => {
-     if (isRemoteAction) return;
-    socket.emit('videoAction', { type: 'pause', currentTime: movie.currentTime });
-});
+    if (event.data === YT.PlayerState.PLAYING) {
+        socket.emit("videoAction", {
+            type: "play",
+            currentTime
+        });
+    };
+    if (event.data === YT.PlayerState.PAUSED) {
+        socket.emit("videoAction", {
+            type: "pause",
+            currentTime
+        });
+    }
+}
+let lastTime = 0;
 
-movie.addEventListener('seeked', () => {
-     if (isRemoteAction) return;
-    socket.emit('videoAction', { type: 'seek', currentTime: movie.currentTime });
-});
+setInterval(() => {
+    if (!player || player.getPlayerState() !== YT.PlayerState.PLAYING) return;
+
+    const now = player.getCurrentTime();
+
+    if (Math.abs(now - lastTime) > 2) {
+        socket.emit("videoAction", {
+            type: "seek",
+            currentTime: now
+        });
+    }
+
+    lastTime = now;
+}, 1000);
 
 // Receive events
-socket.on('videoAction', data => {
+socket.on("videoAction", (data) => {
     isRemoteAction = true;
-    movie.currentTime = data.currentTime;
-    if (data.type === 'play') {
-        movie.play();
-    }
-    else if (data.type === 'pause') {
-        movie.pause();
+
+    player.seekTo(data.currentTime, true);
+
+    if (data.type === "play") {
+        player.playVideo();
     }
 
+    if (data.type === "pause") {
+        player.pauseVideo();
+    }
+    if (data.type === "seek") {
+        player.seekTo(data.currentTime, true);
+    }
     setTimeout(() => {
         isRemoteAction = false;
-    }, 200);
+    }, 300);
 });

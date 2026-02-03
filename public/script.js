@@ -29,6 +29,7 @@ function onYouTubeIframeAPIReady() {
         }
     });
 }
+onYouTubeIframeAPIReady()
 
 // Show peer ID
 peer.on('open', id => {

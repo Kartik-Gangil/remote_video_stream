@@ -15,7 +15,7 @@ app.use(express.json());
 app.use(cors());
 const PORT = process.env.PORT || 8005;
 
-app.use(express.static('public'));
+app.use("/", express.static(path.join(__dirname, 'public')));
 
 app.get('/video', (req, res) => {
     const videoPath = path.join(__dirname, '/video/document_6062122312809846557.mp4');
@@ -55,4 +55,4 @@ io.on('connection', socket => {
     socket.on('disconnect', () => console.log('User disconnected', socket.id));
 });
 
-server.listen(PORT, '0.0.0.0',() => console.log('Server running on 8005'));
+server.listen(PORT, '0.0.0.0', () => console.log('Server running on 8005'));
